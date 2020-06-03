@@ -81,7 +81,7 @@ _check_beekeeper() {
 }
 
 _check_deps() {
-    if ! grep -q docker <<< "$(id "$(whoami)")"; then
+    if ! grep -qE "docker|admin" <<< "$(id "$(whoami)")"; then
         if (( EUID != 0 )); then
             echo "$(whoami) not member of docker group..."
             exit 1
