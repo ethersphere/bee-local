@@ -1,0 +1,9 @@
+  Corefile: |
+    {DOMAIN}:53 {
+        etcd {
+          path /skydns
+          endpoint http://{ETCD_IP}:2379
+          credentials root secret
+        }
+        cache 1
+      }
