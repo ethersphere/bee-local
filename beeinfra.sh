@@ -9,9 +9,8 @@ set -euo pipefail
 #/ Description:
 #/ Spinup local k8s infra and run beekeeper tests
 #/ 
-#/ Examples:
-#/ ./beeinfra.sh 
-#/ ./beeinfra.sh 
+#/ Example:
+#/ ./beeinfra.sh install --test --local -r 3
 #/
 #/ Actions:
 

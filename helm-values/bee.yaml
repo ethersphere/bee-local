@@ -39,7 +39,6 @@ resources:
 beeConfig:
   # bootnode: "/dnsaddr/localhost"
   enable_debug_api: true
-  # enable_local_discovery: true
   verbosity: 5
 
 bootnode:
