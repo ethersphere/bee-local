@@ -197,7 +197,7 @@ _helm() {
 }
 
 _helm_uninstall() {
-    helm uninstall bee --namespace "${NAMESPACE}" #&> /dev/null
+    helm uninstall bee --namespace "${NAMESPACE}" &> /dev/null
 
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
@@ -258,6 +258,7 @@ _test() {
     ./beekeeper check fullconnectivity --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}"
     ./beekeeper check pingpong --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}"
     ./beekeeper check pushsync --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3
+    ./beekeeper check pushsync --bzz-chunk --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
@@ -362,6 +363,8 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if k3d ls &> /dev/null; then
         echo "cluster running..."
+    elif [[ $(k3d ls 2>/dev/null| grep k3s | cut -d' ' -f6) == "stopped" ]]; then
+        k3d start &> /dev/null
     else
         _prepare
     fi
