@@ -148,7 +148,9 @@ _build() {
     fi
     docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" .
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
-    cd - &> /dev/null
+    if [[ -n $OLDPWD ]]; then
+        cd - &> /dev/null
+    fi
 }
 
 # if dns-discovery is enabled delete all records because of the upgrade/uninstallation
