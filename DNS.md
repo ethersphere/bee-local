@@ -32,7 +32,7 @@ Confirm that installation was successful with:
 
 `nslookup example.localhost`
 
-## <a id="hosts"></a>Populate /etc/hosts
+## Populate /etc/hosts
 
 * add entries (set REPLICA)
 >```bash

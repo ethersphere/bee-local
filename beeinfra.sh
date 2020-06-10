@@ -144,8 +144,8 @@ _prepare() {
 _build() {
     if [[ ! -f go.mod ]]; then
         cd "${GOPATH}"/src/github.com/ethersphere/bee
+        make lint vet test-race
     fi
-    make lint vet test-race
     docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" .
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
     cd - &> /dev/null
