@@ -389,4 +389,6 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
     if [[ -n $RUN_TESTS ]] && [[ ! $ACTION == "uninstall" ]]; then
         _test
     fi
+    # temp to debug github actions
+    curl -s bee-{0..2}-debug.localhost/peers | jq .
 fi
