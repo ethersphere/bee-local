@@ -196,7 +196,6 @@ _helm() {
         if [[ -n $DNS_DISCO ]]; then
             _populate_dns "${i}"
         fi
-        # sleep 2
     done
 }
 
@@ -223,7 +222,7 @@ _helm_on_delete() {
         if [[ -n $DNS_DISCO ]]; then
             _populate_dns "${i}"
         fi
-        sleep 3
+        sleep 2
     done
 }
 
