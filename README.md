@@ -9,7 +9,7 @@ This repository contains all the definitions for the Bee local cluster developme
 * [jq](https://stedolan.github.io/jq/download/) >= 1.15
 * resolvable `.localhost` domain to 127.0.0.1
     * enabled by default on Linux
-    * [how to configure on MacOS](DNS.md)
+    * how to configure on MacOS using [dnsmasq](DNS.md) or using [/etc/hosts](DNS.md#populate-etc-hosts)
 
 ## Installing
 

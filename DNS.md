@@ -31,3 +31,16 @@ To be able to access `bee` cluster from the local machine, needed for tests and 
 Confirm that installation was successful with:
 
 `nslookup example.localhost`
+
+## <a id="hosts"></a>Populate /etc/hosts
+
+* add entries (set REPLICA)
+>```bash
+>export REPLICA=3
+>echo -e "127.0.0.10\tregistry.localhost" | sudo tee -a /etc/hosts
+>for ((i=0; i<REPLICA; i++)); do echo -e "127.0.1.$((i+1))\tbee-${i}.localhost bee-${i}-debug.localhost"; done | sudo tee -a /etc/hosts
+>```
+* remove entries
+>```bash
+>grep -vE 'bee|registry.localhost' /etc/hosts | sudo tee /etc/hosts
+>```
