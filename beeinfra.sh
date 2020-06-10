@@ -148,7 +148,7 @@ _build() {
     fi
     docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" .
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
-    if [[ -n $OLDPWD ]]; then
+    if [[ ! -z ${OLDPWD+x} ]]; then
         cd - &> /dev/null
     fi
 }
