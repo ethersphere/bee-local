@@ -32,7 +32,7 @@ Use `./beeinfra.sh -h` for more options
 
 By default `bee-0` will have a fixed hash and other nodes will connect using known multiaddr for `bee-0`.
 
-For DNS discovery inside [helm-values/bee.yaml](helm-values/bee.yaml) set `bootnode.enabled` to `false` and uncomment `bootnode` under `beeConfig` and install cluster using command
+For DNS discovery install cluster using command
 ```bash
-./beeinfra.sh install --dns-disco --local --test -r 3
+./beeinfra.sh install --dns-disco --local --test -r 3 --bootnode /dnsaddr/localhost
 ```

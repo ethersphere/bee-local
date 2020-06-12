@@ -35,6 +35,8 @@ declare -x CHAOS=""
 declare -x DESTROY=""
 declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
+declare -x BEE_0_HASH="16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
+declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/7070/p2p/${BEE_0_HASH}"
 
 _revdomain() {
     for((i=$#;i>0;i--));do printf "%s/" ${!i}; done
@@ -159,6 +161,19 @@ _clear_dns() {
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl del --prefix /skydns/${SKYDNS} --user=root --password=secret" &> /dev/null
 }
 
+# initial dns config with bee-0
+_populate_dns_0() {
+    ip="${1}"
+    SKYDNS=$(_revdomain ${DOMAIN/./ })
+    # shellcheck disable=SC1117,SC2059
+    MOD=$(printf "\x6$((0 % 4 + 1))")
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/'$MOD'.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/tcp/7070/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/tcp/7070/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+}
+
 # after every pod is started get all values and populate dns
 _populate_dns() {
     i="${1}"
@@ -186,15 +201,22 @@ _helm() {
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
-    helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
+    helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" #&> /dev/null
 
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
-        until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
-            sleep .1
-        done
-        if [[ -n $DNS_DISCO ]]; then
-            _populate_dns "${i}"
+        if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
+            until kubectl get pod --namespace bee bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
+            until [[ "$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
+            BEE_0_IP=$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP)
+            _populate_dns_0 "${BEE_0_IP}"
+        else
+            until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
+                sleep .1
+            done
+            if [[ -n $DNS_DISCO ]]; then
+                _populate_dns "${i}"
+            fi
         fi
     done
 }
@@ -212,7 +234,7 @@ _helm_on_delete() {
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
     fi
-    helm upgrade bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
+    helm upgrade bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" "${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
     for ((i=0; i<REPLICA; i++)); do
         kubectl delete pod --namespace "${NAMESPACE}" bee-"${i}" &> /dev/null
         echo "waiting for the bee-${i}..."
@@ -258,10 +280,16 @@ _test() {
     _check_beekeeper
     echo "executing beekeeper tests..."
     sleep 5
+    echo "fullconnectivity"
     ./beekeeper check fullconnectivity --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}"
+    echo "pingpong"
     ./beekeeper check pingpong --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}"
+    echo "pushsync (bytes)"
     ./beekeeper check pushsync --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3
-    ./beekeeper check pushsync --bzz-chunk --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3
+    echo "pushsync (chunks)"
+    ./beekeeper check pushsync --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3 --upload-chunks
+    echo "retrieval"
+    ./beekeeper check retrieval --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain "${DOMAIN}" --api-domain "${DOMAIN}" --node-count "${REPLICA}" --upload-node-count "${REPLICA}" --chunks-per-node 3
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
@@ -293,7 +321,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 shift
             ;;
 # chaos will install chaos-mesh https://github.com/pingcap/chaos-mesh
-#/   chaos    install chaos-mesh
+#/   chaos      install chaos-mesh
             chaos)
                 ACTION="chaos"
                 shift
@@ -314,6 +342,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   -r, --replica n    set number of bee replicas (default is 3)
             -r|--replica)
                 REPLICA="${2}"
+                shift 2
+            ;;
+#/   --bootnode         set bootnode (default is predifined bee-0 multiaddress)
+            --bootnode)
+                HELM_SET_BOOTNODES="${2}"
                 shift 2
             ;;
 #/   --test             run beekeeper tests at the end (default is false)
