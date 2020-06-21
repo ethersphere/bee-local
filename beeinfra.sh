@@ -168,8 +168,8 @@ _populate_dns_0() {
     # shellcheck disable=SC1117,SC2059
     MOD=$(printf "\x6$((0 % 4 + 1))")
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/'$MOD'.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/tcp/7070/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
+    # kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/tcp/7070/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
 }
@@ -185,8 +185,8 @@ _populate_dns() {
     IFS=/ read -r _ _ ip lay4 port prot hash <<< "${UNDERLAY_TCP}"
     IFS=/ read -r _ _ _ lay4_u _ prot1_u prot2_u _ <<< "${UNDERLAY_UDP}"
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}_dnsaddr/a${i} '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/'$MOD'.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a${i} '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-'$i'.'$DOMAIN'/'$lay4'/'$port'/'$prot'/'$hash'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b${i} '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-'$i'.'$DOMAIN'/'$lay4_u'/'$port'/'$prot1_u'/'$prot2_u'/'$hash'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a${i} '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-'$i'.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
+    # kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b${i} '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-'$i'.'$DOMAIN'/'$lay4_u'/'$port'/'$prot1_u'/'$prot2_u'/'$hash'\"}' --user=root --password=secret" &> /dev/null
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-${i}/_dnsaddr/a${i} '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/'$lay4'/'$port'/'$prot'/'$hash'\"}' --user=root --password=secret" &> /dev/null
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-${i}/_dnsaddr/b${i} '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/'$lay4_u'/'$port'/'$prot1_u'/'$prot2_u'/'$hash'\"}' --user=root --password=secret" &> /dev/null
 }
@@ -406,7 +406,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
     fi
 
     if [[ -n $LOCAL ]] && [[ ! $ACTION == "uninstall" ]]; then
-        IMAGE_TAG=$(date +%s)
+        IMAGE_TAG="local-$(date +%s)"
         _build
     fi
 
