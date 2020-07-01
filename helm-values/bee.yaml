@@ -42,7 +42,7 @@ beeConfig:
   # bootnode: "/dnsaddr/localhost"
   ## two bootnodes
   # bootnode: "/dns4/bee-0-headless.bee.svc.cluster.local/tcp/7070/p2p/16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL /dns4/bee-1-headless.bee.svc.cluster.local/tcp/7070/p2p/16Uiu2HAmMw7Uj6vfraD9BYx3coDs6MK6pAmActE8fsfaZwigsaB6"
-  enable_debug_api: true
+  debug_api_enable: true
   verbosity: 5
 
 libp2pSettings:
