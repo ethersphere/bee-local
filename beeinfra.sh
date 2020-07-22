@@ -104,7 +104,7 @@ _check_deps() {
 
     if ! command -v k3d &> /dev/null; then
         echo "k3d installing..."
-        curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | bash
+        curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash
     fi
 }
 
