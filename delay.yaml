@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay-example
+  namespace: bee
+spec:
+  action: delay
+  mode: all
+  selector:
+    labelSelectors:
+      "app.kubernetes.io/instance": "bee"
+  delay:
+    latency: "90ms"
+    correlation: "95"
+    jitter: "90ms"
+  duration: "14s"
+  scheduler:
+    cron: "@every 15s"

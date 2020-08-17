@@ -1,0 +1,14 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  hosts:
+    - pushgateway.localhost
+  path: /
+
+extraArgs:
+  - -listen
+  - ":9091"
+
+serviceMonitor:
+  enabled: true

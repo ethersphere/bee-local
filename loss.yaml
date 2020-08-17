@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-loss-example
+  namespace: bee
+spec:
+  action: loss
+  mode: all
+  selector:
+    labelSelectors:
+      "app.kubernetes.io/instance": "bee" 
+  loss:
+    loss: "75"
+    correlation: "25"
+  duration: "14s"
+  scheduler:
+    cron: "@every 15s"
