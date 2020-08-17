@@ -95,10 +95,10 @@ _check_deps() {
         echo "curl is missing..."
         exit 1
     elif ! command -v kubectl &> /dev/null; then
-        echo "curl is missing..."
+        echo "kubectl is missing..."
         exit 1
     elif ! command -v helm &> /dev/null; then
-        echo "curl is missing..."
+        echo "helm is missing..."
         exit 1
     fi
 
