@@ -234,7 +234,7 @@ _helm_on_delete() {
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
     fi
-    helm upgrade bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" "${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
+    helm upgrade bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
     for ((i=0; i<REPLICA; i++)); do
         kubectl delete pod --namespace "${NAMESPACE}" bee-"${i}" &> /dev/null
         echo "waiting for the bee-${i}..."
