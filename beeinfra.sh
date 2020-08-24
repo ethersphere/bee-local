@@ -406,7 +406,6 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
     fi
 
     if [[ -n $LOCAL ]] && [[ ! $ACTION == "uninstall" ]]; then
-        IMAGE_TAG="local-$(date +%s)"
         _build
     fi
 
