@@ -30,11 +30,11 @@ securityContext:
 
 resources:
   limits:
-    memory: 1Gi
-    cpu: 1.0
-  requests:
     memory: 0.5Gi
-    cpu: 0.50
+    cpu: 0.5
+  requests:
+    memory: 0.25Gi
+    cpu: 0.25
 
 beeConfig:
   bootnode: "/dns4/bee-0-headless.bee.svc.cluster.local/tcp/7070/p2p/16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
