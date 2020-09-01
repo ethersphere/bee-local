@@ -8,7 +8,7 @@ This repository contains all the definitions for the Bee local cluster developme
 * [helm](https://helm.sh/docs/intro/install/) >= 3.0
 * [jq](https://stedolan.github.io/jq/download/) >= 1.15
 * resolvable `.localhost` domain to 127.0.0.1
-    * enabled by default on Linux
+    * enabled by default on Linux with `libnss-myhostname`
     * how to configure on MacOS using [dnsmasq](DNS.md) or using [/etc/hosts](DNS.md#populate-etchosts)
 
 ## Installing
