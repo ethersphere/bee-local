@@ -19,6 +19,7 @@ usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 expr "$*" : ".*-h" > /dev/null && usage
 expr "$*" : ".*--help" > /dev/null && usage
 
+declare -x DOCKER_BUILDKIT="1"
 declare -x REPLICA="3"
 declare -x DOMAIN="localhost"
 declare -x REGISTRY="registry.${DOMAIN}:5000"
@@ -26,7 +27,7 @@ declare -x SKYDNS=""
 declare -x REPO="ethersphere/bee"
 declare -x HELM_SET_REPO="${REPO}"
 declare -x CHART="${REPO}"
-#declare -x CHART="./charts/bee"
+# declare -x CHART="./charts/bee"
 declare -x NAMESPACE="bee"
 declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
@@ -122,8 +123,9 @@ _check_deps() {
 _prepare() {
     echo "starting k3d cluster..."
 
+    docker volume create registry &> /dev/null
     docker volume create k3d-registry &> /dev/null
-    docker container run -d --name registry.localhost --restart always -p 5000:5000 registry:2 &> /dev/null
+    docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
     k3d create --publish="80:80" --enable-registry --registry-name k3d-registry.localhost --registry-volume k3d-registry --registry-port 5001 --enable-registry-cache --registries-file hack/registries.yaml &> /dev/null
 
     until k3d get-kubeconfig --name='k3s-default' &> /dev/null; do echo "waiting for the cluster..."; sleep 1; done
@@ -171,7 +173,7 @@ _build() {
         cd "${GOPATH}"/src/github.com/ethersphere/bee
         make lint vet test-race
     fi
-    docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" .
+    docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=${DOMAIN}:5000/"${REPO}":"${IMAGE_TAG}" --build-arg BUILDKIT_INLINE_CACHE=1
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
     if [[ -n ${OLDPWD+x} ]]; then
         cd - &> /dev/null
