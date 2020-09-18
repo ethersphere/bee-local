@@ -97,28 +97,51 @@ _check_deps() {
     elif ! command -v kubectl &> /dev/null; then
         echo "kubectl is missing..."
         exit 1
-    elif ! command -v helm &> /dev/null; then
-        echo "helm is missing..."
+    elif ! command -v docker &> /dev/null; then
+        echo "docker is missing..."
         exit 1
     fi
 
+    if ! command -v helm &> /dev/null; then
+        echo "helm is missing..."
+        echo "installing helm..."
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+    fi
     if ! command -v k3d &> /dev/null; then
-        echo "k3d installing..."
+        echo "k3d is missing..."
+        echo "installing k3d..."
         curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash
+    fi
+    if ! command -v tilt &> /dev/null; then
+        echo "tilt is missing..."
+        echo "installing tilt..."
+        curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
     fi
 }
 
 _prepare() {
     echo "starting k3d cluster..."
-    k3d create --publish="80:80" --enable-registry --registry-name registry."${DOMAIN}" &> /dev/null &
+
+    docker volume create k3d-registry &> /dev/null
+    docker container run -d --name registry.localhost --restart always -p 5000:5000 registry:2 &> /dev/null
+    k3d create --publish="80:80" --enable-registry --registry-name k3d-registry.localhost --registry-volume k3d-registry --registry-port 5001 --enable-registry-cache --registries-file hack/registries.yaml &> /dev/null
 
     until k3d get-kubeconfig --name='k3s-default' &> /dev/null; do echo "waiting for the cluster..."; sleep 1; done
-
+    docker network connect k3d-k3s-default registry.localhost &> /dev/null
     KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
     export KUBECONFIG
     kubectl create ns "${NAMESPACE}" &> /dev/null
     helm repo add ethersphere https://ethersphere.github.io/helm &> /dev/null
     helm repo update &> /dev/null
+
+    nodes=$(kubectl get nodes -o go-template --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}')
+    if [ -n "${nodes}" ]; then
+        for node in ${nodes}; do
+            kubectl annotate node "${node}" \
+                tilt.dev/registry=localhost:5000 \
+                tilt.dev/registry-from-cluster=registry.localhost:5000 &> /dev/null
+        done
+    fi
 
     if [[ -n $CHAOS ]]; then
         _chaos
@@ -150,7 +173,7 @@ _build() {
     fi
     docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" .
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
-    if [[ ! -z ${OLDPWD+x} ]]; then
+    if [[ -n ${OLDPWD+x} ]]; then
         cd - &> /dev/null
     fi
 }
@@ -388,6 +411,8 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if [[ -n $DESTROY ]]; then
         echo "destroying k3d cluster..."
+        docker network disconnect k3d-k3s-default registry.localhost &> /dev/null
+        docker rm -f registry.localhost &> /dev/null
         k3d d &> /dev/null
         exit 0
     fi
