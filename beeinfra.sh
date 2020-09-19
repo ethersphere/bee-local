@@ -173,7 +173,8 @@ _build() {
         cd "${GOPATH}"/src/github.com/ethersphere/bee
         make lint vet test-race
     fi
-    docker build --network=host -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=${DOMAIN}:5000/"${REPO}":"${IMAGE_TAG}" --build-arg BUILDKIT_INLINE_CACHE=1
+    docker build --target build -t "${DOMAIN}"/"${REPO}":build . --cache-from=${DOMAIN}:5000/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
+    docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=${DOMAIN}:5000/"${REPO}":"${IMAGE_TAG}" --cache-from=${DOMAIN}:5000/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
     if [[ -n ${OLDPWD+x} ]]; then
         cd - &> /dev/null
