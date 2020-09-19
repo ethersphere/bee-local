@@ -152,18 +152,7 @@ _prepare() {
     until kubectl get svc traefik -n kube-system &> /dev/null; do echo "waiting for the kube-system..."; sleep 1; done
 
     if [[ -n $DNS_DISCO ]]; then
-        kubectl get configmaps --namespace=kube-system coredns -o yaml | sed "s/reload$/reload 2s/" | kubectl apply -f - &> /dev/null
-        kubectl create ns etcd &> /dev/null
-        helm repo add bitnami https://charts.bitnami.com/bitnami &> /dev/null
-        helm repo update &> /dev/null
-        helm install etcd bitnami/etcd --namespace=etcd -f helm-values/etcd.yaml &> /dev/null
-        until kubectl get svc etcd -n etcd &> /dev/null; do echo "waiting for the etcd..."; sleep 1; done
-        until kubectl exec -ti etcd-0 -n etcd -- sh -c "curl http://127.0.0.1:2379/version" &> /dev/null; do echo "waiting for the etcd..."; sleep 1; done
-        ETCD_IP=$(kubectl get svc etcd -n etcd -o=custom-columns=IP:.spec.clusterIP --no-headers)
-        ## Configure cluster coredns to query etcd for custom domain
-        kubectl get configmaps --namespace=kube-system coredns -o yaml | sed -e '/  Corefile: |/{r hack/Customfile' -e 'd' -e '}' | sed "s/{ETCD_IP}/${ETCD_IP}/; s/{DOMAIN}/${DOMAIN}/" | kubectl apply -f - &> /dev/null
-        kubectl delete pod --namespace kube-system -l k8s-app=kube-dns &> /dev/null
-        until [[ $(kubectl get pod --namespace kube-system -l k8s-app=kube-dns -o json | jq .items[0].status.containerStatuses[0].ready 2>/dev/null) == "true" ]]; do echo "waiting for the coredns..."; sleep 1; done
+        _dns_disco
     fi
     echo "cluster running..."
 }
@@ -287,6 +276,22 @@ _helm_upgrade_check() {
     fi
 }
 
+_dns_disco() {
+    kubectl get configmaps --namespace=kube-system coredns -o yaml | sed "s/reload$/reload 2s/" | kubectl apply -f - &> /dev/null
+    kubectl create ns etcd &> /dev/null
+    helm repo add bitnami https://charts.bitnami.com/bitnami &> /dev/null
+    helm repo update &> /dev/null
+    helm install etcd bitnami/etcd --namespace=etcd -f helm-values/etcd.yaml &> /dev/null
+    until kubectl get svc etcd -n etcd &> /dev/null; do echo "waiting for the etcd..."; sleep 1; done
+    until kubectl exec -ti etcd-0 -n etcd -- sh -c "curl http://127.0.0.1:2379/version" &> /dev/null; do echo "waiting for the etcd..."; sleep 1; done
+    ETCD_IP=$(kubectl get svc etcd -n etcd -o=custom-columns=IP:.spec.clusterIP --no-headers)
+    ## Configure cluster coredns to query etcd for custom domain
+    kubectl get configmaps --namespace=kube-system coredns -o yaml | sed -e '/  Corefile: |/{r hack/Customfile' -e 'd' -e '}' | sed "s/{ETCD_IP}/${ETCD_IP}/; s/{DOMAIN}/${DOMAIN}/" | kubectl apply -f - &> /dev/null
+    kubectl delete pod --namespace kube-system -l k8s-app=kube-dns &> /dev/null
+    until [[ $(kubectl get pod --namespace kube-system -l k8s-app=kube-dns -o json | jq .items[0].status.containerStatuses[0].ready 2>/dev/null) == "true" ]]; do echo "waiting for the coredns..."; sleep 1; done
+    echo "installed dns discovery support..."
+}
+
 _chaos() {
     echo "installing chaos-mesh..."
     if [ ! -d "chaos-mesh" ]; then
@@ -350,6 +355,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   chaos      install chaos-mesh
             chaos)
                 ACTION="chaos"
+                shift
+            ;;
+#/   dns-disco   prepare cluster for dns discovery
+            dns-disco)
+                ACTION="dns-disco"
                 shift
             ;;
 #/   destroy    destroy k3d cluster
@@ -422,6 +432,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if [[ $ACTION == "chaos" ]]; then
         _chaos
+        exit 0
+    fi
+
+    if [[ $ACTION == "dns-disco" ]]; then
+        _dns_disco
         exit 0
     fi
 
