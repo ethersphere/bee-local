@@ -336,6 +336,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 ACTION="install"
                 shift
             ;;
+#/   prepare    prepare cluster infra
+            prepare)
+                ACTION="prepare"
+                shift
+            ;;
 #/   upgrade    helm upgrade bee
             upgrade)
                 ACTION="upgrade"
@@ -427,6 +432,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         docker network disconnect k3d-k3s-default registry.localhost &> /dev/null
         docker rm -f registry.localhost &> /dev/null
         k3d d &> /dev/null
+        exit 0
+    fi
+
+    if [[ $ACTION == "prepare" ]]; then
+        _prepare
         exit 0
     fi
 
