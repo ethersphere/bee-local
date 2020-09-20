@@ -216,7 +216,7 @@ _helm() {
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
-    helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" #&> /dev/null
+    helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
 
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
@@ -227,7 +227,39 @@ _helm() {
             _populate_dns_0 "${BEE_0_IP}"
         else
             until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
-                sleep .1
+                sleep .3
+            done
+            if [[ -n $DNS_DISCO ]]; then
+                _populate_dns "${i}"
+            fi
+        fi
+    done
+}
+
+_helm_template() {
+    if [[ -n $DNS_DISCO ]]; then
+        _clear_dns
+    fi
+    LAST_BEE=$((REPLICA-1))
+    if [[ $ACTION == "upgrade" ]]; then
+        BEES=$(seq $LAST_BEE -1 0)
+    else
+        BEES=$(seq 0 1 $LAST_BEE)
+    fi
+    helm template bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --no-hooks > bee-parallel.yaml &> /dev/null
+    f=bee-parallel.yaml
+    yq w -i -d$(awk '$0 == "---" { d++ } /^kind:/ { kind = $2 } /^  name: bee$/ { if (kind == "StatefulSet") exit } END { print d-1 }' "$f") "$f" spec.podManagementPolicy Parallel &> /dev/null
+    kubectl create -f bee-parallel.yaml -n bee &> /dev/null
+    for i in ${BEES}; do
+        echo "waiting for the bee-${i}..."
+        if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
+            until kubectl get pod --namespace bee bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
+            until [[ "$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
+            BEE_0_IP=$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP)
+            _populate_dns_0 "${BEE_0_IP}"
+        else
+            until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
+                sleep .3
             done
             if [[ -n $DNS_DISCO ]]; then
                 _populate_dns "${i}"
@@ -238,6 +270,15 @@ _helm() {
 
 _helm_uninstall() {
     helm uninstall bee --namespace "${NAMESPACE}" &> /dev/null
+
+    if [[ -n $DNS_DISCO ]]; then
+        _clear_dns
+    fi
+    echo "uninstalling bee pods.."    
+}
+
+_helm_uninstall_template() {
+    kubectl delete -f bee-parallel.yaml -n "${NAMESPACE}" &> /dev/null
 
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
@@ -336,6 +377,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 ACTION="install"
                 shift
             ;;
+#/   install-template    install bee from template
+            install-template)
+                ACTION="install-template"
+                shift
+            ;;
 #/   prepare    prepare cluster infra
             prepare)
                 ACTION="prepare"
@@ -349,6 +395,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   uninstall  helm uninstall bee
             uninstall)
                 ACTION="uninstall"
+                shift
+            ;;
+#/   uninstall-template  helm uninstall-template bee
+            uninstall-template)
+                ACTION="uninstall-template"
                 shift
             ;;
 #/   test       run only tests
@@ -466,6 +517,10 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         _helm_upgrade_check
     elif [[ $ACTION == "uninstall" ]]; then
         _helm_uninstall
+    elif [[ $ACTION == "uninstall-template" ]]; then
+        _helm_uninstall_template
+    elif [[ $ACTION == "install-template" ]]; then
+        _helm_template
     else
         _helm "${ACTION}"
     fi
