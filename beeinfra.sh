@@ -246,7 +246,7 @@ _helm_template() {
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
-    helm template bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --no-hooks > bee-parallel.yaml &> /dev/null
+    helm template bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --no-hooks > bee-parallel.yaml
     f=bee-parallel.yaml
     yq w -i -d$(awk '$0 == "---" { d++ } /^kind:/ { kind = $2 } /^  name: bee$/ { if (kind == "StatefulSet") exit } END { print d-1 }' "$f") "$f" spec.podManagementPolicy Parallel &> /dev/null
     kubectl create -f bee-parallel.yaml -n bee &> /dev/null
