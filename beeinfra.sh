@@ -233,6 +233,7 @@ _helm() {
                 _populate_dns "${i}"
             fi
         fi
+        until [[ "$(curl -s bee-0-debug.${DOMAIN}/peers | jq -r '.peers | length' 2> /dev/null)" -eq ${LAST_BEE} ]]; do sleep 1; done
     done
 }
 
@@ -265,6 +266,7 @@ _helm_template() {
                 _populate_dns "${i}"
             fi
         fi
+        until [[ "$(curl -s bee-0-debug.${DOMAIN}/peers | jq -r '.peers | length' 2> /dev/null)" -eq ${LAST_BEE} ]]; do sleep 1; done
     done
 }
 
