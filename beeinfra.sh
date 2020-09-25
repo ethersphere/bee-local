@@ -40,6 +40,8 @@ declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
 declare -x BEE_0_HASH="16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
 declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/7070/p2p/${BEE_0_HASH}"
+declare -x PAY_THRESHOLD=100000
+declare -x PAY_TOLERANCE=$((PAY_THRESHOLD/10))
 
 _revdomain() {
     for((i=$#;i>0;i--));do printf "%s/" ${!i}; done
@@ -220,15 +222,16 @@ _helm() {
         _clear_dns
     fi
     LAST_BEE=$((REPLICA-1))
+    PAY_TOLERANCE=$((PAY_THRESHOLD/10))
     if [[ $ACTION == "upgrade" ]]; then
         BEES=$(seq $LAST_BEE -1 0)
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
     if [ "${CLEF}" == "true" ]; then
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSidecar.enabled="true" --set swarmSettings.existingSecret="bee-clefkeys" #&> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSidecar.enabled="true" --set swarmSettings.existingSecret="bee-clefkeys" #&> /dev/null
     else
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.swap_enable="${GETH}" --set swarmSettings.existingSecret="bee-swarmkeys" #&> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set swarmSettings.existingSecret="bee-swarmkeys" #&> /dev/null
     fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
@@ -495,6 +498,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
             --dns-disco)
                 DNS_DISCO="true"
                 shift
+            ;;
+#/   --pay-threshold    set pay threshold, pay tolerance will be 10% from this value
+            --pay-threshold)
+                PAY_THRESHOLD="${2}"
+                shift 2
             ;;
 #/   --local            use local bee code, build it and deploy it (default is false)
             --local)
