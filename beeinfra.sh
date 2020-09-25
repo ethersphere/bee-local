@@ -33,6 +33,8 @@ declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
 declare -x ACTION=""
 declare -x CHAOS=""
+declare -x GETH=""
+declare -x CLEF=""
 declare -x DESTROY=""
 declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
@@ -145,11 +147,18 @@ _prepare() {
         done
     fi
 
+    kubectl create -f hack/bee-clefkeys-secret.json &> /dev/null
+    kubectl create -f hack/bee-swarmkeys-secret.json &> /dev/null
+
+    until kubectl get svc traefik -n kube-system &> /dev/null; do echo "waiting for the kube-system..."; sleep 1; done
+
     if [[ -n $CHAOS ]]; then
         _chaos
     fi
 
-    until kubectl get svc traefik -n kube-system &> /dev/null; do echo "waiting for the kube-system..."; sleep 1; done
+    if [[ -n $GETH ]]; then
+        _geth
+    fi
 
     if [[ -n $DNS_DISCO ]]; then
         _dns_disco
@@ -216,8 +225,11 @@ _helm() {
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
-    helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" &> /dev/null
-
+    if [ "${CLEF}" == "true" ]; then
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSidecar.enabled="true" --set swarmSettings.existingSecret="bee-clefkeys" #&> /dev/null
+    else
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.swap_enable="${GETH}" --set swarmSettings.existingSecret="bee-swarmkeys" #&> /dev/null
+    fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
         if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
@@ -350,6 +362,17 @@ _chaos() {
     cd .. &> /dev/null
 }
 
+_geth() {
+    echo "installing geth..."
+    kubectl create ns geth &> /dev/null
+    if [ "${CLEF}" == "true" ]; then
+        helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap-clef.yaml &> /dev/null
+    else
+        helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml #&> /dev/null
+    fi
+    echo "installed geth..."
+}
+
 _test() {
     _check_beekeeper
     echo "executing beekeeper tests..."
@@ -415,6 +438,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 ACTION="chaos"
                 shift
             ;;
+#/   geth       install geth-swap in cluster
+            geth)
+                ACTION="geth"
+                shift
+            ;;
 #/   dns-disco   prepare cluster for dns discovery
             dns-disco)
                 ACTION="dns-disco"
@@ -451,6 +479,16 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   --chaos            run beekeeper chaoss at the end (default is false)
             --chaos)
                 CHAOS="true"
+                shift
+            ;;
+#/   --geth             install geth-swap in cluster (default is false)
+            --geth)
+                GETH="true"
+                shift
+            ;;
+#/   --clef             install clef enabled bee (default is false)
+            --clef)
+                CLEF="true"
                 shift
             ;;
 #/   --dns-disco        enable dns-discovery infra for bee (default is false)
@@ -500,6 +538,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if [[ $ACTION == "dns-disco" ]]; then
         _dns_disco
+        exit 0
+    fi
+
+    if [[ $ACTION == "geth" ]]; then
+        _geth
         exit 0
     fi
 
