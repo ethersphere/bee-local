@@ -368,11 +368,7 @@ _chaos() {
 _geth() {
     echo "installing geth..."
     kubectl create ns geth &> /dev/null
-    if [ "${CLEF}" == "true" ]; then
-        helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap-clef.yaml &> /dev/null
-    else
-        helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml #&> /dev/null
-    fi
+    helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml &> /dev/null
     echo "installed geth..."
 }
 

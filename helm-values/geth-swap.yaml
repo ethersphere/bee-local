@@ -5,13 +5,11 @@ swap:
     - 2b8fc0989b29a41395a47ab653a21e4d03820be2
     - c4bbed69464b3d7b209d74ac782dcdfbfb112d4a
     - d63e9e72316517a79adf140b4fde3a2009f71215
-  # bzzaccounts:
-  #   - aad6954c4ff312bf07fe696e8888bc12b95ce08b
-  #   - 0555c925d19a350fe72089d7aa438aaea06b7a74
-  #   - b17a85a2a1cb59869fad2ed6f61656e6695fbe16
-  #   - a6e1dee0a0cb8a6abd9ef7b15e550d152aa72a72
-  #   - 2e2f938dbf8fa240e9e9db6feae3c653b728438b
-
+    - aad6954c4ff312bf07fe696e8888bc12b95ce08b
+    - 0555c925d19a350fe72089d7aa438aaea06b7a74
+    - b17a85a2a1cb59869fad2ed6f61656e6695fbe16
+    - a6e1dee0a0cb8a6abd9ef7b15e550d152aa72a72
+    - 2e2f938dbf8fa240e9e9db6feae3c653b728438b
 geth:
   genesis:
     clique:
