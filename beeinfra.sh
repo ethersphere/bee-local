@@ -137,7 +137,9 @@ _prepare() {
     KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
     export KUBECONFIG
     kubectl create ns "${NAMESPACE}" &> /dev/null
-    helm repo add ethersphere https://ethersphere.github.io/helm &> /dev/null
+    if [[ $(helm repo list) != *ethersphere* ]]; then
+        helm repo add ethersphere https://ethersphere.github.io/helm &> /dev/null
+    fi
     helm repo update &> /dev/null
 
     nodes=$(kubectl get nodes -o go-template --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}')
