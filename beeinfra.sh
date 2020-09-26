@@ -158,12 +158,12 @@ _prepare() {
         _chaos
     fi
 
-    if [[ -n $GETH ]]; then
-        _geth
-    fi
-
     if [[ -n $DNS_DISCO ]]; then
         _dns_disco
+    fi
+
+    if [[ -n $GETH ]]; then
+        _geth
     fi
     echo "cluster running..."
 }
