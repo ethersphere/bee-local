@@ -12,3 +12,7 @@ swap:
     - a6e1dee0a0cb8a6abd9ef7b15e550d152aa72a72
     - 2e2f938dbf8fa240e9e9db6feae3c653b728438b
 
+geth:
+  genesis:
+    clique:
+      period: 3
