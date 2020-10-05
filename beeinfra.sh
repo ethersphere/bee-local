@@ -33,7 +33,7 @@ declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
 declare -x ACTION=""
 declare -x CHAOS=""
-declare -x GETH=""
+declare -x GETH="false"
 declare -x CLEF=""
 declare -x DESTROY=""
 declare -x LOCAL=""
@@ -372,6 +372,7 @@ _geth() {
     echo "installing geth..."
     kubectl create ns geth &> /dev/null
     helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml &> /dev/null
+    until [[ $(kubectl get pod --namespace geth -l job-name=geth-swap-setupcontracts -o json | jq -r .items[0].status.containerStatuses[0].state.terminated.reason 2>/dev/null) == "Completed" ]]; do echo "waiting for the geth init..."; sleep 1; done
     echo "installed geth..."
 }
 
