@@ -3,12 +3,12 @@
 set -euo pipefail
 
 #/
-#/ Usage: 
+#/ Usage:
 #/ ./beeinfra.sh ACTION [OPTION]
-#/ 
+#/
 #/ Description:
 #/ Spinup local k8s infra and run beekeeper tests
-#/ 
+#/
 #/ Example:
 #/ ./beeinfra.sh install --test --local -r 3
 #/
@@ -151,9 +151,6 @@ _prepare() {
         done
     fi
 
-    kubectl create -f hack/bee-clefkeys-secret.json &> /dev/null
-    kubectl create -f hack/bee-swarmkeys-secret.json &> /dev/null
-
     until kubectl get svc traefik -n kube-system &> /dev/null; do echo "waiting for the kube-system..."; sleep 1; done
 
     if [[ -n $CHAOS ]]; then
@@ -232,9 +229,9 @@ _helm() {
         BEES=$(seq 0 1 $LAST_BEE)
     fi
     if [ "${CLEF}" == "true" ]; then
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSidecar.enabled="true" --set swarmSettings.existingSecret="bee-clefkeys" #&> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" &> /dev/null
     else
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set swarmSettings.existingSecret="bee-swarmkeys" #&> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" &> /dev/null
     fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
@@ -294,7 +291,7 @@ _helm_uninstall() {
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
     fi
-    echo "uninstalling bee pods.."    
+    echo "uninstalling bee pods.."
 }
 
 _helm_uninstall_template() {
@@ -303,7 +300,7 @@ _helm_uninstall_template() {
     if [[ -n $DNS_DISCO ]]; then
         _clear_dns
     fi
-    echo "uninstalling bee pods.."    
+    echo "uninstalling bee pods.."
 }
 
 _helm_on_delete() {

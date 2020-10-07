@@ -61,9 +61,6 @@ libp2pSettings:
     ## two bootnodes
     # bee-1: '{"address":"03348ecf3adae1d05dc16e475a83c94e49e28a4d3c7db5eccbf5ca4ea7f688ddcdfe88acbebef2037c68030b1a0a367a561333e5c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470","crypto":{"cipher":"aes-128-ctr","ciphertext":"0d0ff25e9b03292e622c5a09ec00c2acb7ff5882f02dd2f00a26ac6d3292a434","cipherparams":{"iv":"cd4082caf63320b306fe885796ba224f"},"kdf":"scrypt","kdfparams":{"n":32768,"r":8,"p":1,"dklen":32,"salt":"a4d63d56c539eb3eff2a235090127486722fa2c836cf735d50d673b730cebc3f"},"mac":"aad40da9c1e742e2b01bb8f76ba99ace97ccb0539cea40e31eb6b9bb64a3f36a"},"version":3}'
 
-clefSidecar:
-  enabled: false
-
 swarmSettings:
   enabled: true
   swarmKeys:
@@ -72,12 +69,17 @@ swarmSettings:
     bee-2: '{"address":"2b8fc0989b29a41395a47ab653a21e4d03820be2","crypto":{"cipher":"aes-128-ctr","ciphertext":"ba75d99c824310f39bd1600aaf0c9bc315149825d209ef11dd84952ef0c2bdcc","cipherparams":{"iv":"0fd32979ca9aa4bf3d57231ab80f5cbf"},"kdf":"scrypt","kdfparams":{"n":32768,"r":8,"p":1,"dklen":32,"salt":"b839868be4948bd017b6ed9dbe9d45d9e8524b550a5bff7ed4af4be433b767c7"},"mac":"2a041f0410b6e1d34697263bf64f4bd90634e4e10d7ca935d2b3a15d48a6a443"},"version":3}'
     bee-3: '{"address":"c4bbed69464b3d7b209d74ac782dcdfbfb112d4a","crypto":{"cipher":"aes-128-ctr","ciphertext":"f13f88198d33355c35771d35da8006248b90ee9b5cb04a21d4d9d8401e24de86","cipherparams":{"iv":"05797b390785ac970d3f846d89632ae3"},"kdf":"scrypt","kdfparams":{"n":32768,"r":8,"p":1,"dklen":32,"salt":"26a9790ca9643a7c8ae8187b9791c07376d397ae014b1622c8ae361e3af4dfd0"},"mac":"48a3ad693aa38939ecc3c3a631a1913ca654e7d581c5c4d68624ab86e1233dba"},"version":3}'
     bee-4: '{"address":"d63e9e72316517a79adf140b4fde3a2009f71215","crypto":{"cipher":"aes-128-ctr","ciphertext":"410ac686b6ca596a2de0618b91db304a78895ca8935dc66384ad5b901b0c9e9c","cipherparams":{"iv":"bfd221687a5fcc3ae5888e785788a42f"},"kdf":"scrypt","kdfparams":{"n":32768,"r":8,"p":1,"dklen":32,"salt":"194c1525dacc0ea5db5f1d2a4db1954512a97c54eb1e8be7052f0216d1bdd6a4"},"mac":"dddd275f3a9d61d6edd6724f0f773ddcb678a37ed2fa3cd1be5717bc4caaa56d"},"version":3}'
+
+clefSettings:
+  enabled: false
   clefKeys:
-    bee-0: '{"address":"aad6954c4ff312bf07fe696e8888bc12b95ce08b","crypto":{"cipher":"aes-128-ctr","ciphertext":"1037cb4ad1e7d50addef55b8cdc3572da4bf6d7da1964e7dd16359a9ccb5c548","cipherparams":{"iv":"1deff744e85602ec5fae1f2d569b0c1e"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"51fa1daffc80bf646c8fdef69f2119b715e8152fa15463403bf1d1cff3191cb0"},"mac":"9c5575a53ff5b9132180e1bd6cb1b5791202275a46530b9dc4344053b3738bcc"},"id":"f557bfac-4d01-4d52-9639-ccaa31d4b2fc","version":3}'
-    bee-1: '{"address":"0555c925d19a350fe72089d7aa438aaea06b7a74","crypto":{"cipher":"aes-128-ctr","ciphertext":"672ab4d6025329b8b0d03c0addb16ac246171c478097d3ab13fc62c4e2bc33ad","cipherparams":{"iv":"ebd1077db0c39db2dc313f5ce745fd37"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"d54bb6f16119871cae744256e12fd6e3b670e67b2603bb0c6a2a33355cd880fc"},"mac":"a45bbbb5845da5e2dcf4205b73c97c42fedf707ac136d1e70d89772e94de40e2"},"id":"2e296d08-6e2d-4b57-9266-ab7018a250ae","version":3}'
-    bee-2: '{"address":"b17a85a2a1cb59869fad2ed6f61656e6695fbe16","crypto":{"cipher":"aes-128-ctr","ciphertext":"78f0a089c41c073a3df8f308c6a1ec4c5e971d2e3daa7acad9c33774c7fcc7fd","cipherparams":{"iv":"3027f66607880c444c6bdf65361c3127"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"d69bfb3d3c917d743c4cd49e2d51986ccb13a56d2afece0a9610a8d2bfbc8c0b"},"mac":"e3c07b4b338efe431a9f11a0afe03aaa33e6535271894759f29aed93831655cf"},"id":"5c6d1951-ac09-4d7f-9ebb-cfab6031ccb0","version":3}'
-    bee-3: '{"address":"a6e1dee0a0cb8a6abd9ef7b15e550d152aa72a72","crypto":{"cipher":"aes-128-ctr","ciphertext":"9328ddcaf0cbfded2805b01c41e947cbf52df05a97660ff8c41b51855d5c94f5","cipherparams":{"iv":"8d4e1593d0128d4dbd6ae2a78ea8e6f5"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"e939ee47cdab621ed6f2c079c5e2ca37bfa4c34b361d3e40dabfaa3a03ee777f"},"mac":"fe77a0cdcbd75336637ed07293dabcbc88c6fe863de18642f8cf4b99888f8bd5"},"id":"51cae0ef-3c10-4571-8d10-5c844655a7c5","version":3}'
-    bee-4: '{"address":"2e2f938dbf8fa240e9e9db6feae3c653b728438b","crypto":{"cipher":"aes-128-ctr","ciphertext":"9eb850bda83008e472ebd8e6df91d3557cd5e35ab74fe729ef4a2ed368526509","cipherparams":{"iv":"56dce2366b13a8e09762ef580df5a22a"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"511ff0a4b57a63512b75700f641b894eae7324f50171beae6bacde03d560d96f"},"mac":"4790c8d407f92fa10f307b1db831ab4b185211d4cd89e8ac7f67ed260470d02c"},"id":"d8e20e96-374d-41c2-a0f7-6fa00e04930b","version":3}'
+    bee-0: '{"address":"fd50ede4954655b993ed69238c55219da7e81acf","crypto":{"cipher":"aes-128-ctr","ciphertext":"1c0f603b0dffe53294c7ca02c1a2800d81d855970db0df1a84cc11bc1d6cf364","cipherparams":{"iv":"11c9ac512348d7ccfe5ee59d9c9388d3"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"f6d7a0947da105fa5ef70fa298f65409d12967108c0e6260f847dc2b10455b89"},"mac":"fc6585e300ad3cb21c5f648b16b8a59ca33bcf13c58197176ffee4786628eaeb"},"id":"4911f965-b425-4011-895d-a2008f859859","version":3}'
+    bee-1: '{"address":"804c5b6f71086bd2e9a74207995f0237ed43a39c","crypto":{"cipher":"aes-128-ctr","ciphertext":"a59325fd3896ed0ce19bd2a1878da5210ff1ca01ce0fd0800088448c4f120c95","cipherparams":{"iv":"be6116f2c1c1bc847f453f64c8a54c3d"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"9dc06f7bd249d1de4966a09235abf3b5f252eeb96130195105731b27b6d615d1"},"mac":"9534004532355f1f9f0fa5e7670fb5f687288aa191d65ec2351dffb6d7b1b80d"},"id":"dfa9d87c-6cf9-43db-a968-b53c3c3fbd8f","version":3}'
+    bee-2: '{"address":"86c2779c77170cb280c9b0ce32f50d320739dea1","crypto":{"cipher":"aes-128-ctr","ciphertext":"b491d90c30d61d3b082571a90fa41306d954bd39c1c17afa0e210a5bdcb1b8b0","cipherparams":{"iv":"5730a343af436ccc3223b9c3983dc153"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"6a20bc359d5d1c9b1993a0472717371b03109b640c10cddf94d58223c0a127f4"},"mac":"63a42be70c4c97aae2a9f4cbba8872ead9b4bde4ec35cb67bc8cbec09b54d507"},"id":"f6c4f869-72a4-4e8f-ae47-3c8498c29d99","version":3}'
+    bee-3: '{"address":"ec273857f02cfa99a49e3e9de667d5a920ada2a1","crypto":{"cipher":"aes-128-ctr","ciphertext":"9484f05c423741a5857192378ea2c96a7a70b499ea21fab875190f2f455b80c2","cipherparams":{"iv":"aa8c2a81e958f6e426997a3785ac0429"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"3eacd3f7170b2e999165f139deb9fd8b5e321ee2ab369d8fe82bef4665b3774b"},"mac":"358b66185d4aa4b54fb064f2cabbc420a1ac522940fa467c9df0e9a1faa19a25"},"id":"dc2714e3-77e7-46c9-a0dc-41f47e06786c","version":3}'
+    bee-4: '{"address":"1ed68bae0a3644c5d131224790e66cd23381b842","crypto":{"cipher":"aes-128-ctr","ciphertext":"507928476e96900230d0c48e607809f85aa4a3d4a5d2d1dc8522757b0cdbbb84","cipherparams":{"iv":"bbfbaa2e409771f5a31f1e30c639d27f"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"3adb5c1d70746d8657ce77790e66af0158eee028c8bd3a2912edfbec6340d778"},"mac":"e183678d20cb79dd5ff2fda431d363b429008f0ad5c48fd5d9145f3e776a2896"},"id":"bcadbf44-a948-4a0c-9bec-dbfae0b27929","version":3}'
+  keySecret: clefbeesecret
+
 updateStrategy:
   type: OnDelete
 
@@ -86,4 +88,3 @@ persistence:
   accessMode: ReadWriteOnce
   size: 1Gi
   storageClass: local-path
-
