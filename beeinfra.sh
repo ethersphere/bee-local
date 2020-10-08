@@ -28,7 +28,7 @@ declare -x REPO="ethersphere/bee"
 declare -x HELM_SET_REPO="${REPO}"
 declare -x CHART="${REPO}"
 # declare -x CHART="./charts/bee"
-declare -x NAMESPACE="bee"
+declare -x NAMESPACE="test"
 declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
 declare -x ACTION=""
@@ -236,9 +236,9 @@ _helm() {
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
         if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
-            until kubectl get pod --namespace bee bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
-            until [[ "$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
-            BEE_0_IP=$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP)
+            until kubectl get pod --namespace "${NAMESPACE}" bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
+            until [[ "$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
+            BEE_0_IP=$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP)
             _populate_dns_0 "${BEE_0_IP}"
         else
             until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
@@ -265,13 +265,13 @@ _helm_template() {
     helm template bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --no-hooks > bee-parallel.yaml
     f=bee-parallel.yaml
     yq w -i -d$(awk '$0 == "---" { d++ } /^kind:/ { kind = $2 } /^  name: bee$/ { if (kind == "StatefulSet") exit } END { print d-1 }' "$f") "$f" spec.podManagementPolicy Parallel &> /dev/null
-    kubectl create -f bee-parallel.yaml -n bee &> /dev/null
+    kubectl create -f bee-parallel.yaml -n "${NAMESPACE}" &> /dev/null
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
         if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
-            until kubectl get pod --namespace bee bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
-            until [[ "$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
-            BEE_0_IP=$(kubectl get pod --namespace bee bee-0 -o json | jq -r .status.podIP)
+            until kubectl get pod --namespace "${NAMESPACE}" bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
+            until [[ "$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
+            BEE_0_IP=$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP)
             _populate_dns_0 "${BEE_0_IP}"
         else
             until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
