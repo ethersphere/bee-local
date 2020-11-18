@@ -39,7 +39,7 @@ declare -x DESTROY=""
 declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
 declare -x BEE_0_HASH="16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
-declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/7070/p2p/${BEE_0_HASH}"
+declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/1634/p2p/${BEE_0_HASH}"
 declare -x PAY_THRESHOLD=100000
 declare -x PAY_TOLERANCE=$((PAY_THRESHOLD/10))
 
@@ -195,9 +195,9 @@ _populate_dns_0() {
     MOD=$(printf "\x6$((0 % 4 + 1))")
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/'$MOD'.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
     kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'\"}' --user=root --password=secret" &> /dev/null
-    # kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/tcp/7070/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
-    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/udp/7070/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    # kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}${MOD}/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/dnsaddr/bee-0.'$DOMAIN'/udp/1634/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/a0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/tcp/1634/p2p/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
+    kubectl exec -ti etcd-0 -n etcd -- sh -c "ETCDCTL_API=3 etcdctl put /skydns/${SKYDNS}bee-0/_dnsaddr/b0 '{\"ttl\":1,\"text\":\"dnsaddr=/ip4/'$ip'/udp/1634/p2p/quic/'$BEE_0_HASH'\"}' --user=root --password=secret" &> /dev/null
 }
 
 # after every pod is started get all values and populate dns
