@@ -71,6 +71,7 @@ _install_beekeeper() {
     _os
     curl -Ls https://github.com/ethersphere/beekeeper/releases/download/"${1}"/beekeeper-"${OS}"-"${ARCH}" -o beekeeper
     chmod +x beekeeper
+    echo "kubeconfig: ${HOME}/.kube/config" > "${HOME}"/.beekeeper.yaml
 }
 
 _check_beekeeper() {
