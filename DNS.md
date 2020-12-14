@@ -4,6 +4,7 @@ To be able to access `bee` cluster from the local machine, needed for tests and 
 
 ### Installation
 
+
 * install dnsmasq
 >```bash
 >brew install dnsmasq
