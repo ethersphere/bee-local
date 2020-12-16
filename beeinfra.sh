@@ -26,8 +26,8 @@ declare -x REGISTRY="registry.${DOMAIN}:5000"
 declare -x SKYDNS=""
 declare -x REPO="ethersphere/bee"
 declare -x HELM_SET_REPO="${REPO}"
-declare -x CHART="${REPO}"
-# declare -x CHART="./charts/bee"
+#declare -x CHART="${REPO}"
+declare -x CHART="./charts/bee"
 declare -x NAMESPACE="test"
 declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
@@ -35,6 +35,7 @@ declare -x ACTION=""
 declare -x CHAOS=""
 declare -x GETH="false"
 declare -x CLEF=""
+declare -x K3S=""
 declare -x DESTROY=""
 declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
@@ -71,7 +72,7 @@ _install_beekeeper() {
     _os
     curl -Ls https://github.com/ethersphere/beekeeper/releases/download/"${1}"/beekeeper-"${OS}"-"${ARCH}" -o beekeeper
     chmod +x beekeeper
-    echo "kubeconfig: ${HOME}/.kube/config" > "${HOME}"/.beekeeper.yaml
+#    echo "kubeconfig: ${HOME}/.kube/config" > "${HOME}"/.beekeeper.yaml
 }
 
 _check_beekeeper() {
@@ -113,44 +114,64 @@ _check_deps() {
         echo "installing helm..."
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
     fi
-    if ! command -v k3d &> /dev/null; then
-        echo "k3d is missing..."
-        echo "installing k3d..."
-        curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash
-    fi
-    if ! command -v tilt &> /dev/null; then
-        echo "tilt is missing..."
-        echo "installing tilt..."
-        curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+    # if ! command -v tilt &> /dev/null; then
+    #     echo "tilt is missing..."
+    #     echo "installing tilt..."
+    #     curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
+    # fi
+    if [[ -n $K3S ]]; then
+        if ! command -v k3s &> /dev/null; then
+            echo "k3s is missing..."
+            echo "installing k3s.."
+            curl -sL https://get.k3s.io -o k3s_install.sh
+            sudo curl -sL https://github.com/k3s-io/k3s/releases/download/v1.19.5%2Bk3s1/k3s -o /usr/local/bin/k3s
+            sudo chmod +x k3s_install.sh /usr/local/bin/k3s
+            sudo mkdir -p /etc/rancher/k3s/
+            sudo mkdir -p /var/lib/rancher/k3s/agent/images/
+            sudo mkdir -p /var/lib/rancher/k3s/server/manifests/
+            sudo cp hack/registries_k3s.yaml /etc/rancher/k3s/registries.yaml
+            sudo cp hack/traefik-config.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+            sudo curl -sL https://github.com/k3s-io/k3s/releases/download/v1.19.5%2Bk3s1/k3s-airgap-images-amd64.tar -o /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+        fi
+    else
+        if ! command -v k3d &> /dev/null; then
+            echo "k3d is missing..."
+            echo "installing k3d..."
+            curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash
+        fi
     fi
 }
 
 _prepare() {
-    echo "starting k3d cluster..."
-
     docker volume create registry &> /dev/null
-    docker volume create k3d-registry &> /dev/null
     docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
-    k3d create --publish="80:80" --enable-registry --registry-name k3d-registry.localhost --registry-volume k3d-registry --registry-port 5001 --enable-registry-cache --registries-file hack/registries.yaml &> /dev/null
-
-    until k3d get-kubeconfig --name='k3s-default' &> /dev/null; do echo "waiting for the cluster..."; sleep 1; done
-    docker network connect k3d-k3s-default registry.localhost &> /dev/null
-    KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
-    export KUBECONFIG
+    if [[ -n $K3S ]]; then
+        echo "starting k3s cluster..."
+        INSTALL_K3S_SKIP_DOWNLOAD=true K3S_KUBECONFIG_MODE="644" ./k3s_install.sh #&> /dev/null
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    else
+        echo "starting k3d cluster..."
+        docker volume create k3d-registry &> /dev/null
+        k3d create --publish="80:80" --enable-registry --registry-name k3d-registry.localhost --registry-volume k3d-registry --registry-port 5001 --enable-registry-cache --registries-file hack/registries.yaml &> /dev/null
+        until k3d get-kubeconfig --name='k3s-default' &> /dev/null; do echo "waiting for the cluster..."; sleep 1; done
+        docker network connect k3d-k3s-default registry.localhost &> /dev/null
+        KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+        export KUBECONFIG
+    fi
     kubectl create ns "${NAMESPACE}" &> /dev/null
     if [[ $(helm repo list) != *ethersphere* ]]; then
         helm repo add ethersphere https://ethersphere.github.io/helm &> /dev/null
     fi
     helm repo update &> /dev/null
 
-    nodes=$(kubectl get nodes -o go-template --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}')
-    if [ -n "${nodes}" ]; then
-        for node in ${nodes}; do
-            kubectl annotate node "${node}" \
-                tilt.dev/registry=localhost:5000 \
-                tilt.dev/registry-from-cluster=registry.localhost:5000 &> /dev/null
-        done
-    fi
+    # nodes=$(kubectl get nodes -o go-template --template='{{range .items}}{{printf "%s\n" .metadata.name}}{{end}}')
+    # if [ -n "${nodes}" ]; then
+    #     for node in ${nodes}; do
+    #         kubectl annotate node "${node}" \
+    #             tilt.dev/registry=localhost:5000 \
+    #             tilt.dev/registry-from-cluster=registry.localhost:5000 &> /dev/null
+    #     done
+    # fi
 
     until kubectl get svc traefik -n kube-system &> /dev/null; do echo "waiting for the kube-system..."; sleep 1; done
 
@@ -391,9 +412,6 @@ _test() {
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-
-    _check_deps
-
     while [[ $# -gt 0 ]]; do
         key="$1"
 
@@ -508,6 +526,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 LOCAL="true"
                 shift
             ;;
+#/   --k3s             use k3s for local cluster (default is k3d)
+            --k3s)
+                K3S="true"
+                shift
+            ;;
 #/   -h, --help         display this help message
             *)
                 usage
@@ -519,16 +542,24 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         usage
     fi
 
+    _check_deps
+
     if [[ $ACTION == "test" ]]; then
         _test
         exit 0
     fi
 
     if [[ -n $DESTROY ]]; then
-        echo "destroying k3d cluster..."
-        docker network disconnect k3d-k3s-default registry.localhost &> /dev/null
-        docker rm -f registry.localhost &> /dev/null
-        k3d d &> /dev/null
+        if [[ -n $K3S ]]; then
+            echo "destroying k3s cluster..."
+            docker rm -f registry.localhost &> /dev/null
+            /usr/local/bin/k3s-uninstall.sh &> /dev/null
+        else
+            echo "destroying k3d cluster..."
+            docker network disconnect k3d-k3s-default registry.localhost &> /dev/null
+            docker rm -f registry.localhost &> /dev/null
+            k3d d &> /dev/null
+        fi
         exit 0
     fi
 
