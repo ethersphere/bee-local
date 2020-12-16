@@ -542,8 +542,6 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         usage
     fi
 
-    _check_deps
-
     if [[ $ACTION == "test" ]]; then
         _test
         exit 0
@@ -562,6 +560,8 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         fi
         exit 0
     fi
+
+    _check_deps
 
     if [[ $ACTION == "prepare" ]]; then
         _prepare
@@ -584,9 +584,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
     fi
 
     if k3d ls &> /dev/null; then
-        echo "cluster running..."
+        echo "k3d cluster running..."
     elif [[ $(k3d ls 2>/dev/null| grep k3s | cut -d' ' -f6) == "stopped" ]]; then
         k3d start &> /dev/null
+    elif sudo systemctl is-active k3s &> /dev/null; then
+        echo "k3s cluster running..."
     else
         _prepare
     fi
