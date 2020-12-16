@@ -26,8 +26,8 @@ declare -x REGISTRY="registry.${DOMAIN}:5000"
 declare -x SKYDNS=""
 declare -x REPO="ethersphere/bee"
 declare -x HELM_SET_REPO="${REPO}"
-#declare -x CHART="${REPO}"
-declare -x CHART="./charts/bee"
+declare -x CHART="${REPO}"
+#declare -x CHART="./charts/bee"
 declare -x NAMESPACE="test"
 declare -x RUN_TESTS=""
 declare -x DNS_DISCO=""
@@ -72,7 +72,7 @@ _install_beekeeper() {
     _os
     curl -Ls https://github.com/ethersphere/beekeeper/releases/download/"${1}"/beekeeper-"${OS}"-"${ARCH}" -o beekeeper
     chmod +x beekeeper
-#    echo "kubeconfig: ${HOME}/.kube/config" > "${HOME}"/.beekeeper.yaml
+    echo "kubeconfig: ${HOME}/.kube/config" > "${HOME}"/.beekeeper.yaml
 }
 
 _check_beekeeper() {
