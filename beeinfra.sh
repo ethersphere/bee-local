@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-
+set -x
 #/
 #/ Usage:
 #/ ./beeinfra.sh ACTION [OPTION]
