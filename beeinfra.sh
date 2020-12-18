@@ -130,6 +130,7 @@ _check_deps() {
             sudo mkdir -p /var/lib/rancher/k3s/agent/images/
             sudo mkdir -p /var/lib/rancher/k3s/server/manifests/
             sudo cp hack/registries_k3s.yaml /etc/rancher/k3s/registries.yaml
+            sudo cp hack/coredns-custom.yaml /var/lib/rancher/k3s/server/manifests/coredns-custom.yaml
             sudo cp hack/traefik-config.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
             sudo curl -sL https://github.com/k3s-io/k3s/releases/download/v1.19.5%2Bk3s1/k3s-airgap-images-amd64.tar -o /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
         fi
@@ -147,7 +148,7 @@ _prepare() {
     docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
     if [[ -n $K3S ]]; then
         echo "starting k3s cluster..."
-        INSTALL_K3S_SKIP_DOWNLOAD=true K3S_KUBECONFIG_MODE="644" ./k3s_install.sh #&> /dev/null
+        INSTALL_K3S_SKIP_DOWNLOAD=true K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--disable=coredns" ./k3s_install.sh &> /dev/null
         export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
     else
         echo "starting k3d cluster..."
