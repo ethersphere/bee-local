@@ -154,7 +154,11 @@ _check_deps() {
 
 _prepare() {
     docker volume create registry &> /dev/null
-    docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 docker.pkg.github.com/ethersphere/bee/registry:latest &> /dev/null
+    if [[ -n $CI ]]; then
+        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 docker.pkg.github.com/ethersphere/bee/registry:latest &> /dev/null
+    else
+        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
+    fi
     if [[ -n $K3S ]]; then
         echo "starting k3s cluster..."
         INSTALL_K3S_SKIP_DOWNLOAD=true K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--disable=coredns" ./k3s_install.sh &> /dev/null
@@ -205,8 +209,14 @@ _build() {
         cd "${GOPATH}"/src/github.com/ethersphere/bee
         make lint vet test-race
     fi
-    docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
-    docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:"${IMAGE_TAG}" --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+    if [[ -n $CI ]]; then
+        docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+        docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:"${IMAGE_TAG}" --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+    else
+        docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
+        docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from="${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
+        docker push "${REGISTRY}"/"${REPO}":build
+    fi
     docker push "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}"
     if [[ -n ${OLDPWD+x} ]]; then
         cd - &> /dev/null
