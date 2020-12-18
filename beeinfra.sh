@@ -210,8 +210,8 @@ _build() {
         make lint vet test-race
     fi
     if [[ -n $CI ]]; then
-        docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
-        docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=docker.pkg.github.com/ethersphere/bee/bee:"${IMAGE_TAG}" --cache-from=docker.pkg.github.com/ethersphere/bee/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+        docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=docker.pkg.github.com/ethersphere/bee/build --build-arg BUILDKIT_INLINE_CACHE=1
+        docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=docker.pkg.github.com/ethersphere/bee/runtime --cache-from=docker.pkg.github.com/ethersphere/bee/build --build-arg BUILDKIT_INLINE_CACHE=1
     else
         docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
         docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from="${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
