@@ -36,6 +36,8 @@ declare -x CHAOS=""
 declare -x GETH="false"
 declare -x CLEF=""
 declare -x K3S=""
+declare -x K3S_VERSION="v1.19.5+k3s2"
+declare -x K3S_URL_VERSION="v1.19.5%2Bk3s2"
 declare -x DESTROY=""
 declare -x LOCAL=""
 declare -x IMAGE_TAG="latest"
@@ -123,16 +125,23 @@ _check_deps() {
         if ! command -v k3s &> /dev/null; then
             echo "k3s is missing..."
             echo "installing k3s.."
-            curl -sL https://get.k3s.io -o k3s_install.sh
-            sudo curl -sL https://github.com/k3s-io/k3s/releases/download/v1.19.5%2Bk3s1/k3s -o /usr/local/bin/k3s
-            sudo chmod +x k3s_install.sh /usr/local/bin/k3s
+            K3S_FOLDER=/tmp/k3s-"${K3S_VERSION}"
+            if [[ ! -d "${K3S_FOLDER}" ]]; then
+                mkdir -p "${K3S_FOLDER}"
+                curl -sL https://get.k3s.io -o "${K3S_FOLDER}"/k3s_install.sh
+                curl -sL https://github.com/k3s-io/k3s/releases/download/"${K3S_URL_VERSION}"/k3s -o "${K3S_FOLDER}"/k3s
+                curl -sL https://github.com/k3s-io/k3s/releases/download/"${K3S_URL_VERSION}"/k3s-airgap-images-amd64.tar -o "${K3S_FOLDER}"/k3s-airgap-images-amd64.tar
+            fi
             sudo mkdir -p /etc/rancher/k3s/
             sudo mkdir -p /var/lib/rancher/k3s/agent/images/
             sudo mkdir -p /var/lib/rancher/k3s/server/manifests/
+            cp "${K3S_FOLDER}"/k3s_install.sh .
+            sudo cp "${K3S_FOLDER}"/k3s /usr/local/bin/k3s
+            sudo cp "${K3S_FOLDER}"/k3s-airgap-images-amd64.tar /var/lib/rancher/k3s/agent/images/
             sudo cp hack/registries_k3s.yaml /etc/rancher/k3s/registries.yaml
             sudo cp hack/coredns-custom.yaml /var/lib/rancher/k3s/server/manifests/coredns-custom.yaml
             sudo cp hack/traefik-config.yaml /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
-            sudo curl -sL https://github.com/k3s-io/k3s/releases/download/v1.19.5%2Bk3s1/k3s-airgap-images-amd64.tar -o /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar
+            sudo chmod +x k3s_install.sh /usr/local/bin/k3s
         fi
     else
         if ! command -v k3d &> /dev/null; then
