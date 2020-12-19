@@ -155,7 +155,7 @@ _check_deps() {
 _prepare() {
     docker volume create registry &> /dev/null
     if [[ -n $CI ]]; then
-        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 docker.pkg.github.com/ethersphere/bee/registry:latest &> /dev/null
+        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
     else
         docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
     fi
