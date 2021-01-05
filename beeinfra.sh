@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 set -x
 #/
 #/ Usage:
@@ -155,9 +155,9 @@ _check_deps() {
 _prepare() {
     docker volume create registry &> /dev/null
     if [[ -n $CI ]]; then
-        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
+        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null || true
     else
-        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null
+        docker container run -d --name registry.localhost -v registry:/var/lib/registry --restart always -p 5000:5000 registry:2 &> /dev/null || true
     fi
     if [[ -n $K3S ]]; then
         echo "starting k3s cluster..."
@@ -334,12 +334,9 @@ _helm_template() {
 }
 
 _helm_uninstall() {
-    helm uninstall bee --namespace "${NAMESPACE}" &> /dev/null
-
-    if [[ -n $DNS_DISCO ]]; then
-        _clear_dns
-    fi
-    echo "uninstalling bee pods.."
+    kubectl delete namespace geth &> /dev/null
+    kubectl delete namespace "${NAMESPACE}" &> /dev/null
+    echo "uninstalling bee and geth ns.."
 }
 
 _helm_uninstall_template() {

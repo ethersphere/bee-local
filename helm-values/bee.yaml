@@ -84,6 +84,8 @@ clefSettings:
 updateStrategy:
   type: OnDelete
 
+podManagementPolicy: Parallel
+
 persistence:
   enabled: false
   accessMode: ReadWriteOnce
