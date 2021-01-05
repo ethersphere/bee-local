@@ -210,8 +210,14 @@ _build() {
         make lint vet test-race
     fi
     if [[ -n $CI ]]; then
-        docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=ghcr.io/ethersphere/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
-        docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=ghcr.io/ethersphere/bee:runtime --cache-from=ghcr.io/ethersphere/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+        if [[ -n $K3S ]]; then
+            make binary
+            mv dist/bee bee
+            docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" -f Dockerfile.goreleaser . --cache-from=ghcr.io/ethersphere/bee --build-arg BUILDKIT_INLINE_CACHE=1
+        else
+            docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from=ghcr.io/ethersphere/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+            docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from=ghcr.io/ethersphere/bee:runtime --cache-from=ghcr.io/ethersphere/bee:build --build-arg BUILDKIT_INLINE_CACHE=1
+        fi
     else
         docker build --target build -t "${REGISTRY}"/"${REPO}":build . --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
         docker build -t "${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" . --cache-from="${REGISTRY}"/"${REPO}":"${IMAGE_TAG}" --cache-from="${REGISTRY}"/"${REPO}":build --build-arg BUILDKIT_INLINE_CACHE=1
