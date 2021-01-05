@@ -281,24 +281,23 @@ _helm() {
     else
         helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" &> /dev/null
     fi
-    until ./beekeeper check pingpong --api-scheme http --debug-api-scheme http --disable-namespace --debug-api-domain localhost --api-domain localhost --node-count "${REPLICA}"; do echo "waiting for pingpong..."; sleep .3; done
-    # for i in ${BEES}; do
-    #     echo "waiting for the bee-${i}..."
-    #     if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
-    #         until kubectl get pod --namespace "${NAMESPACE}" bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
-    #         until [[ "$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
-    #         BEE_0_IP=$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP)
-    #         _populate_dns_0 "${BEE_0_IP}"
-    #     else
-    #         until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
-    #             sleep .3
-    #         done
-    #         if [[ -n $DNS_DISCO ]]; then
-    #             _populate_dns "${i}"
-    #         fi
-    #     fi
-    #     until [[ "$(curl -s bee-0-debug.${DOMAIN}/peers | jq -r '.peers | length' 2> /dev/null)" -eq ${LAST_BEE} ]]; do sleep 1; done
-    # done
+    for i in ${BEES}; do
+        echo "waiting for the bee-${i}..."
+        if [[ -n $DNS_DISCO ]] && [[ $i -eq 0 ]]; then
+            until kubectl get pod --namespace "${NAMESPACE}" bee-0 &> /dev/null; do echo "waiting for the bee-0..."; sleep 1; done
+            until [[ "$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP 2> /dev/null)" != "null" ]]; do echo "waiting for the bee-0..."; sleep 1; done
+            BEE_0_IP=$(kubectl get pod --namespace "${NAMESPACE}" bee-0 -o json | jq -r .status.podIP)
+            _populate_dns_0 "${BEE_0_IP}"
+        else
+            until [[ "$(curl -s bee-"${i}"-debug."${DOMAIN}"/readiness | jq -r .status 2>/dev/null)" == "ok" ]]; do
+                sleep .3
+            done
+            if [[ -n $DNS_DISCO ]]; then
+                _populate_dns "${i}"
+            fi
+        fi
+        until [[ "$(curl -s bee-"${i}"-debug.${DOMAIN}/peers | jq -r '.peers | length' 2> /dev/null)" -eq ${LAST_BEE} ]]; do sleep 1; done
+    done
 }
 
 _helm_template() {
