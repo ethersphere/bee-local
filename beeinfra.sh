@@ -172,7 +172,7 @@ _prepare() {
         KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
         export KUBECONFIG
     fi
-    kubectl create ns "${NAMESPACE}" &> /dev/null
+    kubectl create ns "${NAMESPACE}" &> /dev/null || true
     if [[ $(helm repo list) != *ethersphere* ]]; then
         helm repo add ethersphere https://ethersphere.github.io/helm &> /dev/null
     fi
@@ -334,8 +334,8 @@ _helm_template() {
 }
 
 _helm_uninstall() {
-    kubectl delete namespace geth &> /dev/null
-    kubectl delete namespace "${NAMESPACE}" &> /dev/null
+    kubectl delete deployments.apps -n geth geth-swap &> /dev/null
+    kubectl delete statefulsets.apps -n "${NAMESPACE}" bee &> /dev/null
     echo "uninstalling bee and geth ns.."
 }
 
@@ -412,7 +412,7 @@ _chaos() {
 
 _geth() {
     echo "installing geth..."
-    kubectl create ns geth &> /dev/null
+    kubectl create ns geth &> /dev/null || true
     helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml &> /dev/null
     until [[ $(kubectl get pod --namespace geth -l job-name=geth-swap-setupcontracts -o json | jq -r .items[0].status.containerStatuses[0].state.terminated.reason 2>/dev/null) == "Completed" ]]; do echo "waiting for the geth init..."; sleep 1; done
     echo "installed geth..."
