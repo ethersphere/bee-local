@@ -334,8 +334,8 @@ _helm_template() {
 }
 
 _helm_uninstall() {
-    kubectl delete deployments.apps -n geth geth-swap &> /dev/null
-    kubectl delete statefulsets.apps -n "${NAMESPACE}" bee &> /dev/null
+    helm uninstall bee -n "${NAMESPACE}" &> /dev/null
+    helm uninstall geth-swap -n geth &> /dev/null
     echo "uninstalling bee and geth ns.."
 }
 
