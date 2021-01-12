@@ -49,7 +49,7 @@ beeConfig:
   clef_signer_enable: false
   clef_signer_endpoint: http://localhost:8550
   swap_enable: false
-  swap_endpoint: http://geth-swap.geth:8545
+  swap_endpoint: ws://geth-swap.geth:8546
   swap_factory_address: 0x657241f4494a2f15ba75346e691d753a978c72df
   swap_initial_deposit: 1000000000000000000
   verbosity: 5
