@@ -610,8 +610,10 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         echo "k3d cluster running..."
     elif [[ $(k3d ls 2>/dev/null| grep k3s | cut -d' ' -f6) == "stopped" ]]; then
         k3d start &> /dev/null
-    elif sudo systemctl is-active k3s &> /dev/null; then
-        echo "k3s cluster running..."
+    elif [[ -n $K3S ]]; then 
+        if sudo systemctl is-active k3s &> /dev/null; then
+            echo "k3s cluster running..."
+        fi
     else
         _prepare
     fi
