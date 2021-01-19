@@ -45,6 +45,7 @@ declare -x BEE_0_HASH="16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
 declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/1634/p2p/${BEE_0_HASH}"
 declare -x PAY_THRESHOLD=100000
 declare -x PAY_TOLERANCE=$((PAY_THRESHOLD/10))
+declare -x POSTAGE=""
 
 _revdomain() {
     for((i=$#;i>0;i--));do printf "%s/" ${!i}; done
@@ -277,9 +278,9 @@ _helm() {
         BEES=$(seq 0 1 $LAST_BEE)
     fi
     if [ "${CLEF}" == "true" ]; then
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" ${POSTAGE} &> /dev/null
     else
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" ${POSTAGE} &> /dev/null
     fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
@@ -552,6 +553,12 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   --k3s             use k3s for local cluster (default is k3d)
             --k3s)
                 K3S="true"
+                shift
+            ;;
+#/   --postage         set postage-stamp-address to 0x538e6de1d876bbcd5667085257bc92f7c808a0f3 and 
+#/                     price-oracle-address to 0xfc28330f1ece0ef2371b724e0d19c1ee60b728b2
+            --postage)
+                POSTAGE="--set beeConfig.postage_stamp_address=0x538e6de1d876bbcd5667085257bc92f7c808a0f3 --set beeConfig.price_oracle_address=0xfc28330f1ece0ef2371b724e0d19c1ee60b728b2"
                 shift
             ;;
 #/   -h, --help         display this help message
