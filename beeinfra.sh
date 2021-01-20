@@ -590,6 +590,14 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
         fi
         exit 0
     fi
+    
+    if [[ $ACTION == "uninstall" ]]; then
+        _helm_uninstall
+        exit 0
+    elif [[ $ACTION == "uninstall-template" ]]; then
+        _helm_uninstall_template
+        exit 0
+    fi
 
     _check_deps
 
@@ -631,10 +639,6 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if [[ $ACTION == "upgrade" ]]; then
         _helm_upgrade_check
-    elif [[ $ACTION == "uninstall" ]]; then
-        _helm_uninstall
-    elif [[ $ACTION == "uninstall-template" ]]; then
-        _helm_uninstall_template
     elif [[ $ACTION == "install-template" ]]; then
         _helm_template
     else
