@@ -45,6 +45,7 @@ declare -x BEE_0_HASH="16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL"
 declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.local/tcp/1634/p2p/${BEE_0_HASH}"
 declare -x PAY_THRESHOLD=10000000000000
 declare -x PAY_TOLERANCE=$((PAY_THRESHOLD/10))
+declare -x PAY_EARLY=$((PAY_THRESHOLD/10))
 declare -x POSTAGE=""
 
 _revdomain() {
@@ -272,15 +273,16 @@ _helm() {
     fi
     LAST_BEE=$((REPLICA-1))
     PAY_TOLERANCE=$((PAY_THRESHOLD/10))
+    PAY_EARLY=$((PAY_THRESHOLD/10))
     if [[ $ACTION == "upgrade" ]]; then
         BEES=$(seq $LAST_BEE -1 0)
     else
         BEES=$(seq 0 1 $LAST_BEE)
     fi
     if [ "${CLEF}" == "true" ]; then
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" ${POSTAGE} &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" ${POSTAGE} &> /dev/null
     else
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.swap_enable="${GETH}" ${POSTAGE} &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" ${POSTAGE} &> /dev/null
     fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
