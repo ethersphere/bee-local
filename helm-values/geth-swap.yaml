@@ -16,7 +16,7 @@ geth:
       period: 3
 image:
   repository: ethereum/client-go
-  tag: v1.9.25
+  tag: v1.10.1
   pullPolicy: IfNotPresent
 resources:
   limits:
