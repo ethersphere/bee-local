@@ -44,6 +44,7 @@ beeConfig:
   # bootnode: "/dns4/bee-0-headless.bee.svc.cluster.local/tcp/1634/p2p/16Uiu2HAm6i4dFaJt584m2jubyvnieEECgqM2YMpQ9nusXfy8XFzL /dns4/bee-1-headless.bee.svc.cluster.local/tcp/1634/p2p/16Uiu2HAmMw7Uj6vfraD9BYx3coDs6MK6pAmActE8fsfaZwigsaB6"
   cors_allowed_origins: '"*"'
   debug_api_enable: true
+  full_node: true
   global_pinning_enable: true
   payment_threshold: 100000
   payment_tolerance: 10000
