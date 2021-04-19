@@ -81,12 +81,10 @@ swap:
     - be28861da1149eec3ee6d444b66abce7c497703b
     - 42ee908a1576c0b352bb930414a7d4f888e9598e
 
-
-
 geth:
   genesis:
     clique:
-      period: 3
+      period: 1
 image:
   repository: ethereum/client-go
   tag: v1.10.1
