@@ -46,6 +46,7 @@ declare -x HELM_SET_BOOTNODES="/dns4/bee-0-headless.${NAMESPACE}.svc.cluster.loc
 declare -x PAY_THRESHOLD=10000000000000
 declare -x PAY_TOLERANCE=$((PAY_THRESHOLD/10))
 declare -x PAY_EARLY=$((PAY_THRESHOLD/10))
+declare -x DB_CAPACITY=2000
 declare -x POSTAGE=""
 
 _revdomain() {
@@ -280,9 +281,9 @@ _helm() {
         BEES=$(seq 0 1 $LAST_BEE)
     fi
     if [ "${CLEF}" == "true" ]; then
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" ${POSTAGE} &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.db_capacity="${DB_CAPACITY}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" --set beeConfig.clef_signer_enable="true"  --set clefSettings.enabled="true" ${POSTAGE} &> /dev/null
     else
-        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" ${POSTAGE} &> /dev/null
+        helm "${1}" bee -f helm-values/bee.yaml "${CHART}" --namespace "${NAMESPACE}" --set beeConfig.bootnode="${HELM_SET_BOOTNODES}" --set image.repository="${HELM_SET_REPO}" --set image.tag="${IMAGE_TAG}" --set replicaCount="${REPLICA}" --set beeConfig.db_capacity="${DB_CAPACITY}" --set beeConfig.payment_threshold="${PAY_THRESHOLD}" --set beeConfig.payment_tolerance="${PAY_TOLERANCE}" --set beeConfig.payment_early="${PAY_EARLY}" --set beeConfig.swap_enable="${GETH}" ${POSTAGE} &> /dev/null
     fi
     for i in ${BEES}; do
         echo "waiting for the bee-${i}..."
@@ -472,6 +473,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
                 ACTION="uninstall-template"
                 shift
             ;;
+#/   build      build local image and push to local registry
+            build)
+                ACTION="build"
+                shift
+            ;;
 #/   test       run only tests
             test)
                 ACTION="test"
@@ -544,6 +550,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 #/   --pay-threshold    set pay threshold, pay tolerance will be 10% from this value
             --pay-threshold)
                 PAY_THRESHOLD="${2}"
+                shift 2
+            ;;
+#/   --db-capacity      set db capacity, default 2000
+            --db-capacity)
+                DB_CAPACITY="${2}"
                 shift 2
             ;;
 #/   --local            use local bee code, build it and deploy it (default is false)
@@ -620,6 +631,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
     if [[ $ACTION == "geth" ]]; then
         _geth
+        exit 0
+    fi
+
+    if [[ -n $LOCAL ]] && [[ $ACTION == "build" ]]; then
+        _build
         exit 0
     fi
 
