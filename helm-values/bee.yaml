@@ -56,7 +56,7 @@ beeConfig:
   swap_initial_deposit: 500000000000000000
   verbosity: 5
   db_capacity: 2000
-  block_time: 3
+  block_time: 1
 
 libp2pSettings:
   enabled: true
