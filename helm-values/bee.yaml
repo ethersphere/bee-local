@@ -52,7 +52,8 @@ beeConfig:
   clef_signer_endpoint: http://localhost:8550
   swap_enable: false
   swap_endpoint: ws://geth-swap.geth:8546
-  swap_factory_address: 0x657241f4494a2f15ba75346e691d753a978c72df
+  swap_factory_address: 0x09ad42a7d020244920309ffa14ea376dd2d3b7d5
+  swap_legacy_factory_addresses: 0x657241f4494a2f15ba75346e691d753a978c72df
   swap_initial_deposit: 500000000000000000
   verbosity: 5
   db_capacity: 2000
