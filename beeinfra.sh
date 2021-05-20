@@ -418,7 +418,7 @@ _geth() {
     echo "installing geth..."
     kubectl create ns geth &> /dev/null || true
     helm install geth-swap ethersphere/geth-swap -n geth -f helm-values/geth-swap.yaml &> /dev/null
-    until [[ $(kubectl get pod --namespace geth -l job-name=geth-swap-setupcontracts -o json | jq -r .items[0].status.containerStatuses[0].state.terminated.reason 2>/dev/null) == "Completed" ]]; do echo "waiting for the geth init..."; sleep 1; done
+    until [[ $(kubectl get pod --namespace geth -l job-name=geth-swap-setupcontracts -o json | jq -r '.items|last|.status.containerStatuses[0].state.terminated.reason' 2>/dev/null) == "Completed" ]]; do echo "waiting for the geth init..."; sleep 1; done
     echo "installed geth..."
 }
 
